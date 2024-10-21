@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools >= 75.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gptx"
+version = "2024.10.19"
+dependencies = [
+    "torch~=2.5.0",
+    "numpy~=2.1.0",
+    "lightning~=2.4.0"
+]
+requires-python = ">=3.12,<3.13"
+authors = [
+    { name = "Jian Shen", email = "jshen44@fordham.edu" },
+    { name = "Liutong Zhou", email = "tzu-ping@example.com" },
+]
+maintainers = [
+    { name = "Jian Shen", email = "jshen44@fordham.edu" },
+    { name = "Liutong Zhou", email = "tzu-ping@example.com" },
+]
+description = "Reproducing GPT-X from scracth using PyTorch"
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["LLM", "Transformer"]
+classifiers = [
+    "Development Status :: 4 - alpha",
+    "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-xdist", "pytest-cov"]
+dev = ["black", "mypy", "isort", "pylint", "ruff", "gptx[test]"]
+all = ["gptx[dev]", "gptx[test]"]
+
+[project.urls]
+Homepage = "https://github.com/LiutongZhou/GPTX"
+Documentation = "https://readthedocs.org"
+Repository = "https://github.com/LiutongZhou/GPTX"
+"Bug Tracker" = "https://github.com/LiutongZhou/GPTX/issues"
+
+[project.scripts]
+gptx = "gptx:cli.main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gptx", "gptx.*"]
+
+[tool.setuptools.package-data]
+gptx = [
+    "LICENSE",
+    "README.md",
+]
+
+[tool.pytest.ini_options]
+addopts = "--verbose --doctest-modules --cov=src --cov-report term-missing --cov-report html:coverage_reports -n auto"
+doctest_optionflags = "NORMALIZE_WHITESPACE"
+#markers = ["integration", "longrunning"]
