@@ -1,4 +1,9 @@
 """
+Referemce:
+- https://github.com/Lightning-AI/litgpt/blob/main/litgpt/api.py
+- https://github.com/Lightning-AI/litgpt/blob/main/litgpt/model.py
+- https://github.com/Lightning-AI/litgpt/blob/main/litgpt/config.py
+
 Llama-3.2-1B's Config:
 {
     "name": "Llama-3.2-1B{}",
@@ -24,9 +29,11 @@ Llama-3.2-1B's Config:
 }
 
 Usage:
+```python
     model = GPT.from_name("Llama-3.2-1B")
     input_ids = torch.tensor([[1, 2, 3, 4]])
     logits = model(input_ids)
+```
 """
 
 import torch
