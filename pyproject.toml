@@ -6,11 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "gptx"
 version = "2024.10.19"
 dependencies = [
-    "torch~=2.5.0",
-    "numpy~=2.1.0",
-    "lightning~=2.4.0"
+    "torch",
+    "numpy",
+    "lightning"
 ]
-requires-python = ">=3.12,<3.13"
 authors = [
     { name = "Jian Shen", email = "jshen44@fordham.edu" },
     { name = "Liutong Zhou", email = "tzu-ping@example.com" },
