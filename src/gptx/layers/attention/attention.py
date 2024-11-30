@@ -1,16 +1,16 @@
+"""TODO: implement the MultiHeadAttention layer. This is broken right now"""
 import torch
 import torch.nn as nn
 import math
-from litgpt.config import Config
 from typing import Optional, Tuple
 
 from gptx.layers.positional_encoding import apply_rope, build_rope_cache
 
 
-class CausalSelfAttention(nn.Module):
-    def __init__(self, config: Config, block_idx: int) -> None:
+class MultiHeadAttention(nn.Module):
+    def __init__(self, embed_dim : int, head_dim: int,num_heads: int, bias=False, block_idx: int) -> None:
         super().__init__()
-        shape = (config.n_head + 2 * config.n_query_groups) * config.head_size
+        shape = (num_heads + 2 * config.n_query_groups) * head_dim
         # key, query, value projections for all heads, but in a batch
         self.attn = nn.Linear(config.n_embd, shape, bias=config.bias)
         # output projection

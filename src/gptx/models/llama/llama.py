@@ -38,14 +38,13 @@ Usage:
 
 import torch
 import torch.nn as nn
-import math
-from litgpt.config import Config
 from typing import Optional, Tuple
 
-from gptx.layers.attention import CausalSelfAttention
-from gptx.layers.ffn import LLaMAMLP
+from gptx.layers.attention import MultiheadAttention
+from gptx.layers.mlp import LLaMAMLP
 from gptx.layers.positional_encoding import build_rope_cache
 from gptx.models.utils import batched_index_select, build_mask_cache
+from gptx.configs.llama_config import Config
 
 
 class GPT(nn.Module):
@@ -54,11 +53,15 @@ class GPT(nn.Module):
         assert config.padded_vocab_size is not None
         self.config = config
 
-        self.lm_head = nn.Linear(config.n_embd, config.padded_vocab_size, bias=config.lm_head_bias)
+        self.lm_head = nn.Linear(
+            config.n_embd, config.padded_vocab_size, bias=config.lm_head_bias
+        )
         self.transformer = nn.ModuleDict(
             dict(
                 wte=nn.Embedding(config.padded_vocab_size, config.n_embd),
-                h=nn.ModuleList(Block(config, block_idx) for block_idx in range(config.n_layer)),
+                h=nn.ModuleList(
+                    Block(config, block_idx) for block_idx in range(config.n_layer)
+                ),
                 ln_f=config.norm_class(config.n_embd, eps=config.norm_eps),
             )
         )
@@ -76,8 +79,10 @@ class GPT(nn.Module):
         This allows setting a smaller number to avoid allocating unused memory
         """
         if value > self.config.block_size:
-            raise ValueError(f"Cannot attend to {value}, block size is only {self.config.block_size}."
-                             " This is likely because the input text exceeds the supported context length of this model.")
+            raise ValueError(
+                f"Cannot attend to {value}, block size is only {self.config.block_size}."
+                " This is likely because the input text exceeds the supported context length of this model."
+            )
         self._max_seq_length = value
         if not hasattr(self, "cos"):
             # first call
@@ -103,10 +108,14 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx: torch.Tensor, input_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, idx: torch.Tensor, input_pos: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         T = idx.size(1)
         if self.max_seq_length < T:
-            raise ValueError(f"Cannot forward sequence of length {T}, max seq length is only {self.max_seq_length}.")
+            raise ValueError(
+                f"Cannot forward sequence of length {T}, max seq length is only {self.max_seq_length}."
+            )
 
         if input_pos is not None:  # use the kv cache
             cos = batched_index_select(self.cos, 0, input_pos)
@@ -132,21 +141,29 @@ class GPT(nn.Module):
         x = self.transformer.ln_f(x)
         x = self.lm_head(x)  # (b, t, vocab_size)
         if self.config.final_logit_softcapping is not None:
-            x = torch.tanh(x / self.config.final_logit_softcapping) * self.config.final_logit_softcapping
+            x = (
+                torch.tanh(x / self.config.final_logit_softcapping)
+                * self.config.final_logit_softcapping
+            )
         return x
 
-    @classmethod
-    def from_name(cls, name: str, **kwargs: Any) -> Self:
-        return cls(Config.from_name(name, **kwargs))
-
-    def rope_cache(self, device: Optional[torch.device] = None) -> Tuple[torch.Tensor, torch.Tensor]:
-
+    def rope_cache(
+        self, device: Optional[torch.device] = None
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.config.rope_adjustments is None:
             extra_config = None
 
         else:
-            adjusted_params_required = ["factor", "low_freq_factor", "high_freq_factor", "original_max_seq_len"]
-            params_present = [param in self.config.rope_adjustments for param in adjusted_params_required]
+            adjusted_params_required = [
+                "factor",
+                "low_freq_factor",
+                "high_freq_factor",
+                "original_max_seq_len",
+            ]
+            params_present = [
+                param in self.config.rope_adjustments
+                for param in adjusted_params_required
+            ]
             num_params_present = sum(params_present)
 
             if num_params_present == 0:
@@ -154,14 +171,22 @@ class GPT(nn.Module):
             elif num_params_present == 4:
                 # These parameters should always be used together so that we don't interfere with standard rope
                 extra_config = {
-                    "original_max_seq_len": self.config.rope_adjustments["original_max_seq_len"],
+                    "original_max_seq_len": self.config.rope_adjustments[
+                        "original_max_seq_len"
+                    ],
                     "factor": self.config.rope_adjustments["factor"],
                     "low_freq_factor": self.config.rope_adjustments["low_freq_factor"],
-                    "high_freq_factor": self.config.rope_adjustments["high_freq_factor"],
+                    "high_freq_factor": self.config.rope_adjustments[
+                        "high_freq_factor"
+                    ],
                 }
             else:
                 # Some but not all parameters are specified; raise an error
-                missing_params = [param for param, present in zip(adjusted_params_required, params_present) if not present]
+                missing_params = [
+                    param
+                    for param, present in zip(adjusted_params_required, params_present)
+                    if not present
+                ]
                 raise ValueError(
                     f"The following adjusted RoPE parameters are missing in rope_adjustments: {', '.join(missing_params)}. "
                     "All adjusted RoPE parameters must be specified together."
@@ -193,7 +218,11 @@ class GPT(nn.Module):
         # initialize the kv cache for all blocks
         for block in self.transformer.h:
             block.attn.kv_cache = block.attn.build_kv_cache(
-                batch_size, max_seq_length, rope_cache_length, device, dtype,
+                batch_size,
+                max_seq_length,
+                rope_cache_length,
+                device,
+                dtype,
             )
 
         if self.mask_cache is None or self.mask_cache.size(3) != max_seq_length:
@@ -217,14 +246,22 @@ class Block(nn.Module):
             )
 
         self.norm_1 = config.norm_class(config.n_embd, eps=config.norm_eps)
-        self.attn = CausalSelfAttention(config, block_idx)
+        self.attn = MultiheadAttention(config, block_idx)
         self.post_attention_norm = (
-            config.norm_class(config.n_embd, eps=config.norm_eps) if config.post_attention_norm else nn.Identity()
+            config.norm_class(config.n_embd, eps=config.norm_eps)
+            if config.post_attention_norm
+            else nn.Identity()
         )
-        self.norm_2 = None if config.shared_attention_norm else config.norm_class(config.n_embd, eps=config.norm_eps)
-        self.mlp = config.mlp_class(config)
+        self.norm_2 = (
+            None
+            if config.shared_attention_norm
+            else config.norm_class(config.n_embd, eps=config.norm_eps)
+        )
+        self.mlp = LLaMAMLP(config)
         self.post_mlp_norm = (
-            config.norm_class(config.n_embd, eps=config.norm_eps) if config.post_mlp_norm else nn.Identity()
+            config.norm_class(config.n_embd, eps=config.norm_eps)
+            if config.post_mlp_norm
+            else nn.Identity()
         )
 
         self.config = config

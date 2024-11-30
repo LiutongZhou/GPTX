@@ -51,6 +51,9 @@ gptx = [
     "README.md",
 ]
 
+[tool.isort]
+profile = "black"
+
 [tool.pytest.ini_options]
 addopts = "--verbose --doctest-modules --cov=src --cov-report term-missing --cov-report html:coverage_reports -n auto"
 doctest_optionflags = "NORMALIZE_WHITESPACE"
