@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from .._base import Config
+from gptx.configs.llama_config import Config
 
 
 class LLaMAMLP(nn.Module):
