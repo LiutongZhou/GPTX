@@ -1,7 +1,10 @@
 """Functional implementation of the scaled dot-product attention"""
 
-import torch
+from __future__ import annotations
+
 import math
+
+import torch
 from torch.nn.functional import (
     scaled_dot_product_attention as _scaled_dot_product_attention,
 )
@@ -36,8 +39,8 @@ def scaled_dot_product_attention(
         Dropout probability; if greater than 0.0, dropout is applied.
     is_causal : bool
         If set to true, the attention masking is a lower triangular matrix when the mask is a
-        square matrix. The attention masking has the form of the upper left causal bias due to the alignment
-        (see torch.nn.attention.bias.CausalBias) when the mask is a non-square matrix.
+        square matrix. The attention masking has the form of the upper left causal bias due to the
+        alignment (see torch.nn.attention.bias.CausalBias) when the mask is a non-square matrix.
         An error is thrown if both attn_mask and is_causal are set.
     scale : float, optional
         Scaling factor applied prior to softmax. If None, the default value is set
@@ -67,12 +70,13 @@ def scaled_dot_product_attention(
     except:
         L, S = query.size(-2), key.size(-2)
         scale_factor = 1 / math.sqrt(query.size(-1)) if scale is None else scale
-        attn_bias = torch.zeros(L, S, dtype=query.dtype)
+        scale_factor = math.sqrt(scale_factor)
+        attn_bias = torch.zeros((L, S), dtype=query.dtype)
         if is_causal:
             assert (
                 attn_mask is None
-            ), f"{is_causal=} and attn_mask cannot be set together"
-            temp_mask = torch.ones(L, S, dtype=torch.bool).triu(diagonal=1)
+            ), f"{is_causal=} and attn_mask cannot be set simultaneously"
+            temp_mask = torch.ones((L, S), dtype=torch.bool).triu(diagonal=1)
             attn_bias.masked_fill_(temp_mask, float("-inf"))
 
         if attn_mask is not None:
@@ -80,10 +84,9 @@ def scaled_dot_product_attention(
                 attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
             else:
                 attn_bias += attn_mask
-        attn_bias = attn_bias.to(query.dtype)
 
         if enable_gqa:
-            num_heads_query, num_heads_key, num_head_value = (
+            num_heads_query, num_heads_key, num_heads_value = (
                 query.size(-3),
                 key.size(-3),
                 value.size(-3),
@@ -92,15 +95,13 @@ def scaled_dot_product_attention(
                 num_heads_query % num_heads_key == 0
             ), f"{num_heads_query=} and {num_heads_key=} must be divisible"
             assert (
-                num_heads_query % num_head_value == 0
-            ), f"{num_heads_query=} and {num_head_value=} must be divisible"
+                num_heads_query % num_heads_value == 0
+            ), f"{num_heads_query=} and {num_heads_value=} must be divisible"
             key = key.repeat_interleave(num_heads_query // num_heads_key, dim=-3)
-            value = value.repeat_interleave(num_heads_query // num_head_value, dim=-3)
+            value = value.repeat_interleave(num_heads_query // num_heads_value, dim=-3)
 
-        attn_weight = (math.sqrt(scale_factor) * query) @ (
-            math.sqrt(scale_factor) * key.transpose(-2, -1)
-        )
-        attn_weight += attn_bias
+        attn_weight = (scale_factor * query) @ (scale_factor * key.transpose(-2, -1))
+        attn_weight += attn_bias.to(dtype=attn_weight.dtype, device=attn_weight.device)
         attn_score = torch.softmax(attn_weight, dim=-1)
         attn_score = torch.dropout(attn_score, dropout_p, train=True)
         return attn_score @ value
