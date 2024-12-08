@@ -1,4 +1,5 @@
 """Key-value cache for caching keys and values in attention layers at inference time."""
+
 from __future__ import annotations
 
 import warnings
@@ -36,15 +37,6 @@ class KVCache(ABC, TensorCache):
 
     def __init__(self):
         super(ABC, self).__init__()
-
-    @override
-    def __setitem__(self, name: str, tensor: torch.Tensor):
-        """Override the __setitem__ method to enforce the name of the tensor to be cached."""
-        if name not in self._allowed_keys:
-            raise KeyError(
-                f"Only {self._allowed_keys} are allowed as keys for the cache."
-            )
-        super().__setitem__(name, tensor)
 
     @abstractmethod
     @override
