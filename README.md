@@ -3,6 +3,11 @@ Reproducing GPTX from scratch using PyTorch
 
 ## TODO 
 - [ ] Implement the model architecture
+   - [ ] Implement the MHA layer in `layers.attention.attention.py`
+   - [ ] Implement the MLA layer 
+- [ ] Implement BPE tokenizer
+   - [ ] train
+   - [ ] tokenize 
 
 
 ## References
@@ -18,3 +23,13 @@ Reproducing GPTX from scratch using PyTorch
    1. DPO: https://github.com/huggingface/trl/blob/main/trl/trainer/dpo_trainer.py
 1. Use Case
    1. chess GPT: https://adamkarvonen.github.io/machine_learning/2024/01/03/chess-world-models.html
+
+## Run Tests
+```bash
+bash scripts/run_tests.sh
+```
+
+## Check Code Quality
+```bash
+bash scripts/codeqa.sh
+```

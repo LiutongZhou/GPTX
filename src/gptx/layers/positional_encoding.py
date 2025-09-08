@@ -75,9 +75,11 @@ class RotaryPositionalEmbedding[T: torch.Tensor](nn.Module):
 
     Examples
     --------
-    >>> rope = RotaryPositionalEmbedding(dim=128, max_seq_len=1024)
-    >>> x = torch.randn(1, 1, 10, 128)
-    rope(x)
+    >>> rope = RotaryPositionalEmbedding(dim=8, max_seq_len=128)
+    >>> x = torch.randn(1, 2, 1, 8)  # (batch_size, num_heads, seq_len, hidden_dim)
+    >>> x_roped = rope(x)
+    >>> x_roped.shape
+    torch.Size([1, 2, 1, 8])
     """
 
     def __init__(
@@ -113,14 +115,14 @@ class RotaryPositionalEmbedding[T: torch.Tensor](nn.Module):
         """
         super().__init__()
         self.dim = dim
-        self._max_seq_len = None
-        self.max_seq_len = max_seq_len
         self.base = base
         self.condense_ratio = condense_ratio
         self.interleaved = interleaved
         self.device = device
         self.dtype = dtype
         self.cos_sin_cache = CosSinCache()
+        self._max_seq_len = None
+        self.max_seq_len = max_seq_len
 
     @property
     def max_seq_len(self) -> int | None:
@@ -187,7 +189,7 @@ class RotaryPositionalEmbedding[T: torch.Tensor](nn.Module):
             x.ndim >= 2
         ), f"x must have at least 2 dimensions (seq_len, hidden_dim), but got {x.ndim=}"
         if position_idx is None:
-            seq_len = x.shape[-1]
+            seq_len = x.shape[-2]
             if seq_len > (self.max_seq_len or 0):
                 warnings.warn(
                     f"max position index of the input tensor x {seq_len}"

@@ -4,7 +4,15 @@ import torch
 class GenerationMixin(torch.nn.Module):
     # TODO: @liutong
     @torch.inference_mode()
-    def generate(self, input_ids: torch.Tensor, stop_words, do_sample=False, top_k=0, top_p=1.0, max_new_tokens=16):
+    def generate(
+        self,
+        input_ids: torch.Tensor,
+        stop_words,
+        do_sample=False,
+        top_k=0,
+        top_p=1.0,
+        max_new_tokens=16,
+    ):
         self.eval()
         generated_token_ids = []
         while len(generated_token_ids) < max_new_tokens:

@@ -1,0 +1,1 @@
+rm -fr src/gptx.egg-info src/.coverage* tests/.coverage* .coverage*

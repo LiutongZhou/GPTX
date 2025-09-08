@@ -20,7 +20,7 @@ class TensorCache(nn.Module):
         If None, any key is allowed. Default is None.
     """
 
-    _allowed_keys : None | tuple[str, ...] = None
+    _allowed_keys: None | tuple[str, ...] = None
 
     def __init__(
         self,

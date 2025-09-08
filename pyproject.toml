@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gptx"
-version = "2024.10.19"
+version = "2025.1.30"
 dependencies = [
     "torch",
     "numpy",
-    "lightning"
+    "lightning",
+    "einops"
 ]
 authors = [
     { name = "Jian Shen", email = "jshen44@fordham.edu" },
@@ -29,7 +30,7 @@ classifiers = [
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-xdist", "pytest-cov"]
-dev = ["black", "mypy", "isort", "pylint", "ruff", "gptx[test]"]
+dev = ["black", "mypy", "isort", "pylint", "ruff", "gptx[test]", "pre-commit"]
 all = ["gptx[dev]", "gptx[test]"]
 
 [project.urls]

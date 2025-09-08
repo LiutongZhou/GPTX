@@ -36,15 +36,16 @@ Usage:
 ```
 """
 
-import torch
-import torch.nn as nn
 from typing import Optional, Tuple
 
+import torch
+import torch.nn as nn
+
+from gptx.configs.llama_config import Config
 from gptx.layers.attention import MultiheadAttention
 from gptx.layers.mlp import LLaMAMLP
 from gptx.layers.positional_encoding import build_rope_cache
 from gptx.models.utils import batched_index_select, build_mask_cache
-from gptx.configs.llama_config import Config
 
 
 class GPT(nn.Module):

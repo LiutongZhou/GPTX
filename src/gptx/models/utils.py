@@ -19,6 +19,9 @@ def batched_index_select(t, dim, idx):
     res = res.view(*batch_shape, *res.shape[1:])
     return res
 
-def build_mask_cache(max_seq_length: int, device: Optional[torch.device] = None) -> torch.Tensor:
+
+def build_mask_cache(
+    max_seq_length: int, device: Optional[torch.device] = None
+) -> torch.Tensor:
     ones = torch.ones((max_seq_length, max_seq_length), device=device, dtype=torch.bool)
     return torch.tril(ones).unsqueeze(0).unsqueeze(0)
